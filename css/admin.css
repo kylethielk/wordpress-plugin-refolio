@@ -1,0 +1,43 @@
+.portfolio-entry-title {
+    padding: 7px;
+}
+
+.refolio-errors {
+    border: red 1px solid;
+    background-color: #FFF2F2;
+    padding: 7px;
+    margin: -30px 0 0 110px;
+    width: 400px;
+    border-radius: 6px;
+    -webkit-border-radius: 6px;
+    -moz-border-radius: 6px;
+}
+.refolio-form input:not([type='button'])
+{
+    width: 300px;
+}
+.refolio-form textarea
+{
+    width: 300px;
+    height: 150px;
+}
+.refolio-form label
+{
+    color: #9d9d9d;
+}
+.refolio-required
+{
+    color: red;
+}
+.refolio-table td
+{
+    padding: 10px;
+}
+.refolio-table td a
+{
+    margin: 5px;
+}
+.refolio-descructive
+{
+    color: #bc0b0b;
+}
