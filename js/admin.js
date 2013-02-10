@@ -222,7 +222,7 @@ refolio.admin.portfolio = (function ($)
         _portfolio.id = $('#portfolio_id').val();
 
         var hasError = false;
-        if (!_portfolio.id)
+        if (!_portfolio.id || _portfolio.id.indexOf(' ') >= 0)
         {
             this.addErrorStyling($('#portfolio_id'));
 
