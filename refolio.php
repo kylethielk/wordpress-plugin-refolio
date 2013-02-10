@@ -175,8 +175,6 @@ class Refolio
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
 
-
-
         ?>
     <div class="wrap">
         <h2>Refolio Help</h2>
@@ -186,6 +184,8 @@ class Refolio
             rather than the software running your portfolio shine. reFolio lets you create an unlimited number of
             portfolios
             that can be displayed anywhere on your wordpress installation.</p>
+
+        <img src="<?php echo plugins_url() . '/refolio/image/help_screenshot.jpg'; ?>"/>
 
         <h3>Creating Portfolio</h3>
 
@@ -215,7 +215,7 @@ class Refolio
         <p>You can remove an entry by clicking the "Remove Entry" button.</p>
         <img src="<?php echo plugins_url() . '/refolio/image/help_remove_entry.jpg'; ?>"/>
 
-        <p>Entries can be re-orded by dragging/dropping them.</p>
+        <p>Entries can be re-ordered by dragging/dropping them.</p>
 
         <p>When happy with your portfolio click the "Save Portfolio" button at the bottom of the screen.</p>
         <img src="<?php echo plugins_url() . '/refolio/image/help_save.jpg'; ?>"/>
@@ -242,6 +242,47 @@ class Refolio
     <?php
     }
 
+    function portfolio_id_unique($portfolio)
+    {
+        $refolio_portfolios = get_option('refolio_portfolios');
+
+        if (!is_array($refolio_portfolios->portfolios))
+        {
+            $refolio_portfolios->portfolios = array();
+        }
+
+        foreach ($refolio_portfolios->portfolios as $key => $value)
+        {
+            if (strtolower($value->id) == strtolower($portfolio->id) && $value->incremented_id != $portfolio->incremented_id)
+            {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    function next_incremented_id()
+    {
+        $next_incremented_id = 0;
+        $refolio_portfolios = get_option('refolio_portfolios');
+
+        if (!is_array($refolio_portfolios->portfolios))
+        {
+            $refolio_portfolios->portfolios = array();
+        }
+
+        foreach ($refolio_portfolios->portfolios as $key => $value)
+        {
+            if ($value->incremented_id >= $next_incremented_id)
+            {
+                $next_incremented_id = $value->incremented_id + 1;
+            }
+        }
+
+        return $next_incremented_id;
+    }
+
     /**
      * The Admin page that allows us to create a new and modify existing portfolio.
      */
@@ -254,6 +295,8 @@ class Refolio
 
         $this->ensure_root_option_initialized();
 
+        $id_not_unique = false;
+
         $portfolio = new Refolio_Portfolio();
         if (isset($_POST['refolio_action']) && $_POST['refolio_action'] == 'new')
         {
@@ -262,15 +305,25 @@ class Refolio
             $portfolio->set(json_decode(stripslashes($_POST['refolio_portfolio']), true));
 
             //Do nothing if id is empty, this should never happen though as JS should check before submitting
-            if (!empty($portfolio->id))
+            if (!$this->portfolio_id_unique($portfolio))
+            {
+                $id_not_unique = true;
+            }
+            else if (!empty($portfolio->id))
             {
                 $this->merge_portfolio($portfolio);
-
+                header('Location: ' . $this->build_admin_options_page_url());
             }
         }
         else if (isset($_GET['refolio_id']))
         {
             $portfolio = $this->fetch_portfolio($_GET['refolio_id']);
+        }
+
+        if ($portfolio->incremented_id < 0)
+        {
+            //We need to set a new incremented id.
+            $portfolio->incremented_id = $this->next_incremented_id();
         }
 
 
@@ -289,6 +342,16 @@ class Refolio
         </div>
         <h3 class="portfolio-entry-title">Portfolio Details</h3>
 
+        <?php if ($id_not_unique)
+    {
+        ?>
+
+        <div id="refolio_errors_top" class="refolio-errors refolio-errors-top">
+            The ID you entered is not unique. Please enter a new ID and try again.
+        </div>
+        <?php
+    }
+        ?>
         <table class="form-table">
             <tbody>
             <tr valign="top">
@@ -298,7 +361,6 @@ class Refolio
                 </th>
                 <td>
                     <input type="text" id="portfolio_id" name="portfolio_id" value="<?php echo $portfolio->id; ?>"/>
-                    <label for="portfolio_id">*Must be unique, no spaces allowed</label>
                 </td>
             </tr>
             </tbody>
@@ -472,6 +534,7 @@ class Refolio
         <table class="widefat fixed refolio-table" style="margin-top: 15px">
             <thead>
             <th scope="col" id="name" class="manage-column">Project ID</th>
+            <th scope="col" id="usage" class="manage-column">Shortcode</th>
             <th scope="col" id="entry_count" class="manage-column"># of Items</th>
             <th scope="col" id="actions" class="manage-column">Actions</th>
             </thead>
@@ -488,6 +551,7 @@ class Refolio
 
                     ?>
                     <td><strong><?php echo $portfolio->id; ?></strong></td>
+                    <td>[refolio id="<?php echo $portfolio->id; ?>"]</td>
                     <td><?php echo count($portfolio->entries); ?></td>
                     <td><a href="<?php echo $this->build_admin_new_page_url() . '&refolio_id=' . $portfolio->id; ?>">Edit</a>
                         | <a

@@ -7,10 +7,16 @@ require_once 'refolio-portfolio-entry.php';
 class Refolio_Portfolio
 {
     /**
-     * Unique across all portfolios. No Spaces.
+     * Unique across all portfolios. No Spaces. Set by user.
      * @var
      */
     public $id;
+
+    /**
+     * Simple incremented ID similar to primary key in DB. Set by us.
+     * @var
+     */
+    public $incremented_id = -1;
     /**
      * Array of Refolio_Portfolio_Entry.
      * @var
@@ -26,6 +32,7 @@ class Refolio_Portfolio
     public function set($data)
     {
         $this->id = $data['id'];
+        $this->incremented_id = $data['incremented_id'];
         $this->entries = array();
 
         if ($data && $data['entries'])

@@ -205,9 +205,9 @@ refolio.admin.portfolio = (function ($)
         }
 
         //Animate the removal before actually removing.
-        $('#refolio_entry_' + index).animate({opacity:0.0, height:0, margin:0}, 1000, 'swing', function ()
+        $('#refolio_entry_' + id).animate({opacity:0.0, height:0, margin:0}, 1000, 'swing', function ()
         {
-            $('#refolio_entry_' + index).remove();
+            $('#refolio_entry_' + id).remove();
 
         });
 
@@ -235,45 +235,50 @@ refolio.admin.portfolio = (function ($)
         }
 
 
+        if (_portfolio.entries.length < 1)
+        {
+            this.addEntry();
+        }
+
         //Update all entries
         for (var i = 0; i < _portfolio.entries.length; i++)
         {
             var entry = _portfolio.entries[i];
 
-            entry.title = $('#entry_title_' + i).val();
+            entry.title = $('#entry_title_' + entry.id).val();
             if (!entry.title)
             {
-                this.addErrorStyling($('#entry_title_' + i));
+                this.addErrorStyling($('#entry_title_' + entry.id));
                 hasError = true;
             }
             else
             {
-                this.removeErrorStyling($('#entry_title_' + i));
+                this.removeErrorStyling($('#entry_title_' + entry.id));
             }
 
-            entry.description = $('#entry_description_' + i).val();
+            entry.description = $('#entry_description_' + entry.id).val();
             if (!entry.description)
             {
-                this.addErrorStyling($('#entry_description_' + i));
+                this.addErrorStyling($('#entry_description_' + entry.id));
                 hasError = true;
             }
             else
             {
-                this.removeErrorStyling($('#entry_description_' + i));
+                this.removeErrorStyling($('#entry_description_' + entry.id));
             }
 
             if (!entry.image || entry.image == _noImageSrc)
             {
-                this.addErrorStyling($('#entry_image_button_' + i));
+                this.addErrorStyling($('#entry_image_button_' + entry.id));
                 hasError = true
             }
             else
             {
-                this.removeErrorStyling($('#entry_image_button_' + i));
+                this.removeErrorStyling($('#entry_image_button_' + entry.id));
             }
 
-            entry.tags = $('#entry_tags_' + i).val();
-            entry.url = $('#entry_url_' + i).val();
+            entry.tags = $('#entry_tags_' + entry.id).val();
+            entry.url = $('#entry_url_' + entry.id).val();
         }
 
         if (hasError)

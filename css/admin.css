@@ -12,6 +12,9 @@
     -webkit-border-radius: 6px;
     -moz-border-radius: 6px;
 }
+.refolio-errors-top {
+    margin: 15px;
+}
 .refolio-form input:not([type='button'])
 {
     width: 300px;
