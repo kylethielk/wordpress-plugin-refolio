@@ -69,6 +69,7 @@ class Refolio_Pages
     <?php
     }
 
+
     /**
      * Builds the help page.
      * @param Refolio $refolio

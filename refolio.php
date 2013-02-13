@@ -31,6 +31,12 @@ class Refolio
         add_shortcode('refolio', array($this, 'refolio_shortcode'));
     }
 
+    /**
+     * Sort entries by order.
+     * @param $entryA Refolio_Portfolio
+     * @param $entryB Refolio_Portfolio
+     * @return int 1 if entryA->order > entryB->order, -1 if reversed and 0 if equal.
+     */
     function entry_sort($entryA, $entryB)
     {
         if ($entryA->order > $entryB->order)
@@ -50,7 +56,7 @@ class Refolio
      * @param string $content
      * @return string The HTML.
      */
-    function refolio_shortcode($attributes, $content = "")
+    function refolio_shortcode($attributes, $content = '')
     {
 
         if (isset($attributes) && isset($attributes['id']))
@@ -80,11 +86,12 @@ class Refolio
 
                 foreach ($portfolio->entries as $key => $entry)
                 {
+
                     $content .= '
                     {
                         image:"' . $entry->image . '",
                         title:"' . $entry->title . '",
-                        tags:["Tag", "Long Tag", "Very Long Tag"],
+                        tags:'.$entry->buildTagArrayString().',
                         description:"' . $entry->description . '",
                         link:"' . $entry->url . '"
                     },';

@@ -44,4 +44,38 @@ class Refolio_Portfolio_Entry
 
     }
 
+    /**
+     * Tags string of tags i.e tag1,tag2,tag3 and converts to
+     * ["tag1","tag2","tag3"]
+     * @return String
+     */
+    public function buildTagArrayString()
+    {
+        if (empty($this->tags))
+        {
+            return '[]';
+        }
+
+        $tag_array = explode(',', $this->tags);
+        if (count($tag_array) < 1)
+        {
+            return '[]';
+        }
+
+        $tag_string = '[';
+
+        foreach ($tag_array as $key => $tag)
+        {
+            $tag_string .= '"' . $tag . '",';
+        }
+
+        //Strip last comma
+        $tag_string = substr($tag_string, 0, -1);
+
+        $tag_string .= ']';
+
+        return $tag_string;
+
+    }
+
 }

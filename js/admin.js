@@ -220,10 +220,10 @@ refolio.admin.portfolio = (function ($)
     this.submit = function ()
     {
         _portfolio.id = $('#portfolio_id').val();
-        _portfolio.width = $("#portfolio_width").val();
-        _portfolio.height = $("#portfolio_height").val();
+        _portfolio.width = $('#portfolio_width').val();
+        _portfolio.height = $('#portfolio_height').val();
 
-        _portfolio.style_container = $("input[name=portfolio_style]:checked").val();
+        _portfolio.style_container = $('input[name=portfolio_style]:checked').val();
 
         var hasError = false;
         if (!_portfolio.id || _portfolio.id.indexOf(' ') >= 0)
