@@ -17,6 +17,25 @@ class Refolio_Portfolio
      * @var
      */
     public $incremented_id = -1;
+
+    /**
+     * Width of the container.
+     * @var int
+     */
+    public $width = 700;
+    /**
+     * Height of the container.
+     * @var int
+     */
+    public $height = 500;
+
+    /**
+     * Whether or not to style the container. Generally this is set to false so we can fit in with
+     * the default theme.
+     * @var bool
+     */
+    public $style_container = 'false';
+
     /**
      * Array of Refolio_Portfolio_Entry.
      * @var
@@ -34,6 +53,10 @@ class Refolio_Portfolio
         $this->id = $data['id'];
         $this->incremented_id = $data['incremented_id'];
         $this->entries = array();
+        $this->width = $data['width'];
+        $this->height = $data['height'];
+        $this->style_container = $data['style_container'];
+
 
         if ($data && $data['entries'])
         {

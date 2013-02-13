@@ -1,3 +1,6 @@
+/**
+ * John Resig's Templating Engine
+ */
 (function(){
     var cache = {};
 

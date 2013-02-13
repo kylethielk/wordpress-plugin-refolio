@@ -9,33 +9,93 @@ License: GPL2
 */
 
 
+require_once WP_PLUGIN_DIR . '/refolio/refolio-pages.php';
+require_once WP_PLUGIN_DIR . '/refolio/refolio-portfolios.php';
+
 class Refolio
 {
     function __construct()
     {
 
-        //Register our shortcode
-        add_shortcode('refolio', array($this, 'refolio_shortcode'));
 
         // Register site styles and scripts
-        add_action('wp_enqueue_scripts', array($this, 'register_plugin_styles'));
+        add_action('wp_print_styles', array($this, 'register_plugin_styles'));
         add_action('wp_enqueue_scripts', array($this, 'register_plugin_scripts'));
 
         //Register admin
         add_action('admin_menu', array($this, 'admin_plugin_menu'));
         add_action('admin_print_styles', array($this, 'register_admin_styles'));
         add_action('admin_enqueue_scripts', array($this, 'register_admin_scripts'));
+
+        //Register our shortcode
+        add_shortcode('refolio', array($this, 'refolio_shortcode'));
+    }
+
+    function entry_sort($entryA, $entryB)
+    {
+        if ($entryA->order > $entryB->order)
+        {
+            return 1;
+        }
+        else if ($entryA->order < $entryB->order)
+        {
+            return -1;
+        }
+        return 0;
     }
 
     /**
      * Handles the shortcode call.
-     * @param $atts
+     * @param $attributes
      * @param string $content
      * @return string The HTML.
      */
-    function refolio_shortcode($atts, $content = "")
+    function refolio_shortcode($attributes, $content = "")
     {
-        return "content = $content";
+
+        if (isset($attributes) && isset($attributes['id']))
+        {
+            $id = $attributes['id'];
+
+            $portfolio = $this->fetch_portfolio($id);
+
+            if (!isset($portfolio) || $portfolio->incremented_id < 0)
+            {
+                return '!!!Unfortunately there was an error retrieving your reFolio portfolio!!!';
+            }
+            else
+            {
+                usort($portfolio->entries, array($this, 'entry_sort'));
+
+                $div_id = 'reFolio_portfolio_' . $portfolio->incremented_id;
+
+                $content = '<div id="' . $div_id . '" style="height: ' . $portfolio->height . 'px"></div>';
+
+                $content .= '<script type="text/javascript">jQuery(document).ready(function ()
+                {
+                    var portfolio = jQuery("#' . $div_id . '").refolio({
+            width:' . $portfolio->width . ',
+            styleContainer: ' . $portfolio->style_container . ',
+            items:[';
+
+                foreach ($portfolio->entries as $key => $entry)
+                {
+                    $content .= '
+                    {
+                        image:"' . $entry->image . '",
+                        title:"' . $entry->title . '",
+                        tags:["Tag", "Long Tag", "Very Long Tag"],
+                        description:"' . $entry->description . '",
+                        link:"' . $entry->url . '"
+                    },';
+                }
+                //Remove last comma
+                $content = substr($content, 0, -1);
+                $content .= ']       });    });</script>';
+                return $content;
+            }
+        }
+        return '!!!Unfortunately there was an error retrieving your reFolio portfolio. Please make sure to specify the id i.e [refolio id="portfolioId"]!!!';
     }
 
     /**
@@ -59,9 +119,9 @@ class Refolio
      */
     function admin_plugin_menu()
     {
-        add_menu_page('reFolio Portfolio', 'reFolio', 'manage_options', 'refolio_options', array($this, 'admin_plugin_options'), '', '25.52');
-        add_submenu_page('refolio_options', 'New Portfolio', 'New Portfolio', 'manage_options', 'refolio_new', array($this, 'admin_plugin_new'));
-        add_submenu_page('refolio_options', 'Help Me!', 'Help Me!', 'manage_options', 'refolio_help', array($this, 'admin_plugin_help'));
+        add_menu_page('reFolio Portfolio', 'reFolio', 'manage_options', 'refolio_review', array($this, 'admin_plugin_review'), '', '25.52');
+        add_submenu_page('refolio_review', 'New Portfolio', 'New Portfolio', 'manage_options', 'refolio_modify', array($this, 'admin_plugin_modify'));
+        add_submenu_page('refolio_review', 'Help Me!', 'Help Me!', 'manage_options', 'refolio_help', array($this, 'admin_plugin_help'));
     }
 
     /**
@@ -89,6 +149,10 @@ class Refolio
 
     }
 
+    /**
+     * Removes the portfolio of the given ID.
+     * @param $portfolioId The id of the portfolio to delete.
+     */
     function delete_portfolio($portfolioId)
     {
         $refolio_portfolios = get_option('refolio_portfolios');
@@ -98,25 +162,30 @@ class Refolio
             $refolio_portfolios->portfolios = array();
         }
 
-        $removeKey = null;
+        $remove_key = null;
         foreach ($refolio_portfolios->portfolios as $key => $value)
         {
             if (strtolower($value->id) == strtolower($portfolioId))
             {
-                $removeKey = $key;
+                $remove_key = $key;
                 break;
             }
         }
 
-        if (isset($removeKey))
+        if (isset($remove_key))
         {
-            unset($refolio_portfolios->portfolios[$removeKey]);
+            unset($refolio_portfolios->portfolios[$remove_key]);
             update_option('refolio_portfolios', $refolio_portfolios);
         }
 
     }
 
-    function fetch_portfolio($portfolioId)
+    /**
+     * Fetches portfolio of given id.
+     * @param $portfolio_id The id of the portfolio to fetch.
+     * @return Refolio_Portfolio
+     */
+    function fetch_portfolio($portfolio_id)
     {
         $refolio_portfolios = get_option('refolio_portfolios');
 
@@ -127,7 +196,7 @@ class Refolio
 
         foreach ($refolio_portfolios->portfolios as $key => $value)
         {
-            if (strtolower($value->id) == strtolower($portfolioId))
+            if (strtolower($value->id) == strtolower($portfolio_id))
             {
                 return $value;
             }
@@ -168,6 +237,9 @@ class Refolio
         update_option('refolio_portfolios', $refolio_portfolios);
     }
 
+    /**
+     * Builds the help page.
+     */
     function admin_plugin_help()
     {
         if (!current_user_can('manage_options'))
@@ -175,73 +247,14 @@ class Refolio
             wp_die(__('You do not have sufficient permissions to access this page.'));
         }
 
-        ?>
-    <div class="wrap">
-        <h2>Refolio Help</h2>
-
-        <p style="width: 600px">Thank you for using reFolio! reFolio is a beautiful and simplistic portfolio management
-            tool that lets your work
-            rather than the software running your portfolio shine. reFolio lets you create an unlimited number of
-            portfolios
-            that can be displayed anywhere on your wordpress installation.</p>
-
-        <img src="<?php echo plugins_url() . '/refolio/image/help_screenshot.jpg'; ?>"/>
-
-        <h3>Creating Portfolio</h3>
-
-        <p>Start by <a href="<?php echo $this->build_admin_new_page_url(); ?>">creating a portfolio</a>.</p>
-        <br/>
-        <img src="<?php echo plugins_url() . '/refolio/image/help_create.jpg'; ?>"/>
-
-        <p>Each portfolio must have an ID that is unique across all of your portfolios and must not contain any
-            spaces.</p>
-
-        <p>Each portfolio must also have at least one entry. A portfolio can have an unlimited number of entries.</p>
-
-        <p>Each entry can have the following fields:</p>
-
-        <p style="margin-left: 25px">
-            <strong>Name</strong> - Required. The name of this entry.<br/>
-            <strong>Description</strong> - Required. Detailed description of your entry.<br/>
-            <strong>Image</strong> - Required. An image that represents this entry.<br/>
-            <strong>Tags</strong> - Optional. A comma separated list of tags describing the entry i.e "CSS, HTML5,
-            Javascript".<br/>
-            <strong>URL</strong> - Optional. A link to the entry.<br/>
-        </p>
-
-        <p>You can add a new entry by clicking the "Add Portfolio Entry" button.</p>
-        <img src="<?php echo plugins_url() . '/refolio/image/help_add_entry.jpg'; ?>"/>
-
-        <p>You can remove an entry by clicking the "Remove Entry" button.</p>
-        <img src="<?php echo plugins_url() . '/refolio/image/help_remove_entry.jpg'; ?>"/>
-
-        <p>Entries can be re-ordered by dragging/dropping them.</p>
-
-        <p>When happy with your portfolio click the "Save Portfolio" button at the bottom of the screen.</p>
-        <img src="<?php echo plugins_url() . '/refolio/image/help_save.jpg'; ?>"/>
-
-        <br/>
-
-        <h3>Using Your Portfolio</h3>
-
-        <p>Once you have created a portfolio you can use it on any wordpress page/post with the following
-            shortcode: </p>
-
-        <p><strong>[refolio id="portfolioId"]</strong></p>
-
-        <p><i>*portfolioId should be the id that you gave your portfolio.</i></p>
-
-        <br/>
-
-        <h3>Reviewing Your Portfolios</h3>
-
-        <p>You can review/modify/delete all of your portfolios at any time by visiting the <a
-                href="<?php echo $this->build_admin_options_page_url(); ?>">refolio settings page</a>.</p>
-
-    </div>
-    <?php
+        Refolio_Pages::help($this);
     }
 
+    /**
+     * Checks if the id for the supplied portfolio is unique.
+     * @param $portfolio The porftolio to check.
+     * @return bool True if unique, false otherwise.
+     */
     function portfolio_id_unique($portfolio)
     {
         $refolio_portfolios = get_option('refolio_portfolios');
@@ -262,6 +275,10 @@ class Refolio
         return true;
     }
 
+    /**
+     * Calculates the next incremented id for new portfolio.
+     * @return int the next incremented id.
+     */
     function next_incremented_id()
     {
         $next_incremented_id = 0;
@@ -286,7 +303,7 @@ class Refolio
     /**
      * The Admin page that allows us to create a new and modify existing portfolio.
      */
-    function admin_plugin_new()
+    function admin_plugin_modify()
     {
         if (!current_user_can('manage_options'))
         {
@@ -312,7 +329,7 @@ class Refolio
             else if (!empty($portfolio->id))
             {
                 $this->merge_portfolio($portfolio);
-                header('Location: ' . $this->build_admin_options_page_url());
+                header('Location: ' . $this->build_admin_review_page_url());
             }
         }
         else if (isset($_GET['refolio_id']))
@@ -326,163 +343,7 @@ class Refolio
             $portfolio->incremented_id = $this->next_incremented_id();
         }
 
-
-        echo '<div class="wrap">';
-        echo '<h2>Add New Portfolio</h2>';
-        ?>
-
-    <!-- Create the form that will be used to render our options -->
-    <form method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>" id="portfolio_form">
-        <input type="hidden" id="refolio_action" name="refolio_action" value="new"/>
-        <input type="hidden" id="refolio_portfolio" name="refolio_portfolio" value=""/>
-    </form>
-
-    <div class="postbox refolio-form" style="margin-top: 15px">
-        <div class="handlediv" title="Click to toggle"><br>
-        </div>
-        <h3 class="portfolio-entry-title">Portfolio Details</h3>
-
-        <?php if ($id_not_unique)
-    {
-        ?>
-
-        <div id="refolio_errors_top" class="refolio-errors refolio-errors-top">
-            The ID you entered is not unique. Please enter a new ID and try again.
-        </div>
-        <?php
-    }
-        ?>
-        <table class="form-table">
-            <tbody>
-            <tr valign="top">
-                <th scope="row"><strong>ID</strong> <span class="refolio-required">*</span>
-                    <br/>
-                    <label for="portfolio_id">Must be unique, no spaces.</label>
-                </th>
-                <td>
-                    <input type="text" id="portfolio_id" name="portfolio_id" value="<?php echo $portfolio->id; ?>"/>
-                </td>
-            </tr>
-            </tbody>
-        </table>
-
-    </div>
-    <br/><br/>
-
-    <h3>Portfolio Entries</h3>
-
-
-    <!--        <div style="width: 100%: overflow: auto;  height: 40px">-->
-    <input type="button" class="button button-large" value="Add Portfolio Entry"
-           style="margin: -40px 10px 10px 10px; float: right"
-           onclick="refolio.admin.portfolio.addEntry();"/>
-    <!--        </div>-->
-    <ul style="width: 100%" style="list-style: none" id="refolio_portfolio_entries">
-
-    </ul>
-
-    <input type="button" class="button button-large" value="Add Portfolio Entry" style="margin: 10px; float: right"
-           onclick="refolio.admin.portfolio.addEntry();"/>
-
-
-    <input type="button" class="button button-primary button-large" value="Save Portfolio"
-           onclick="refolio.admin.portfolio.submit();"/>
-
-    <div id="refolio_errors" style="display: none" class="refolio-errors">There are errors, please correct them and try
-        again.
-    </div>
-
-    <script type="text/html" id="refolio_entry_template">
-        <li id="refolio_entry_<%=id%>" class="postbox " data-entry-id="<%=id%>">
-            <a name="entry_a_<%=id%>"></a>
-
-            <div class="handlediv" title="Click to toggle"
-                 onclick="refolio.admin.portfolio.toggleElementShowHide(<%=id%>);"><br>
-            </div>
-            <h3 class="portfolio-entry-title"><span
-                    id="portfolio_entry_title_<%=id%>"><%= title ? title : "Portfolio Item" %></span></h3>
-
-            <div class="inside refolio-form" id="portfolio_entry_inside_<%=id%>">
-                <table class="form-table">
-                    <tbody>
-                    <tr valign="top">
-                        <th scope="row"><strong>Name</strong> <span class="refolio-required">*</span>
-                            <br/>
-                            <label for="entry_title_<%=id%>">Title of portfolio item</label>
-                        </th>
-                        <td>
-                            <input type="text" id="entry_title_<%=id%>" name="entry_title_<%=id%>" value="<%=title%>"
-                                   onkeyup="refolio.admin.portfolio.itemTitleChange(<%=id%>);"/>
-
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <th scope="row"><strong>Description</strong><span class="refolio-required">*</span>
-                            <br/>
-                            <label for="entry_description_<%=id%>">Brief description of your work</label>
-                        </th>
-                        <td>
-                            <textarea id="entry_description_<%=id%>"
-                                      name="entry_description_<%=id%>"><%=description%></textarea>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <th scope="row"><strong>Image</strong> <span class="refolio-required">*</span>
-                            <br/>
-                            <label for="entry_image_<%=id%>">Image for portfolio</label>
-                        </th>
-                        <td>
-                            <img src="<%=image%>" border="0" id="entry_image_<%=id%>" style="width: 100px"/>
-                            <br/>
-                            <input id="entry_image_button_<%=id%>" type="button" class="button button-secondary"
-                                   value="Select Image"
-                                   onclick="refolio.admin.portfolio.launchMediaLibrary(<%=id%>);"/>
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <th scope="row"><strong>Tags</strong>
-                            <br/>
-                            <label for="entry_tags_<%=id%>">Comma separated list of tags</label>
-                        </th>
-                        <td>
-                            <input type="text" id="entry_tags_<%=id%>" name="entry_tags_<%=id%>" value="<%=tags%>"/>
-
-                        </td>
-                    </tr>
-                    <tr valign="top">
-                        <th scope="row"><strong>URL</strong>
-                            <br/>
-                            <label for="entry_url_<%=id%>">URL of your project</label>
-                        </th>
-                        <td>
-                            <input type="text" id="entry_url_<%=id%>" name="entry_url_<%=id%>" value="<%=url%>"/>
-
-                        </td>
-                    </tr>
-
-                    </tbody>
-                </table>
-
-
-                <div style="height: 35px">
-                    <input type="button" class="button button-secondary" value="Remove Entry" style="float: right; "
-                           onclick="refolio.admin.portfolio.removeEntry(<%=id%>);"/>
-                </div>
-            </div>
-        </li>
-    </script>
-
-
-
-    <script type="text/javascript">
-        jQuery(document).ready(function ()
-        {
-            refolio.admin.portfolio.init('<?php echo json_encode($portfolio); ?>', '<?php echo plugins_url() . '/refolio/image/no-image.jpg'; ?>');
-        });
-    </script>
-
-    <?php
-        echo '</div>';
+        Refolio_Pages::modify($portfolio, $id_not_unique);
     }
 
     /**
@@ -490,24 +351,31 @@ class Refolio
      */
     function ensure_root_option_initialized()
     {
-        require_once WP_PLUGIN_DIR . '/refolio/refolio-portfolios.php';
         add_option('refolio_portfolios', new Refolio_Portfolios());
     }
 
-    function build_admin_options_page_url()
+    /**
+     * Builds URL for page to review portfolios.
+     * @return string The URL.
+     */
+    function build_admin_review_page_url()
     {
-        return $_SERVER['PHP_SELF'] . '?page=refolio_options';
+        return $_SERVER['PHP_SELF'] . '?page=refolio_review';
     }
 
-    function build_admin_new_page_url()
+    /**
+     * Builds URL for page to create/modify new portfolio.
+     * @return string The URL.
+     */
+    function build_admin_modify_page_url()
     {
-        return $_SERVER['PHP_SELF'] . '?page=refolio_new';
+        return $_SERVER['PHP_SELF'] . '?page=refolio_modify';
     }
 
     /**
      * The Admin page that allows us to see/modify list of portfolios.
      */
-    function admin_plugin_options()
+    function admin_plugin_review()
     {
         if (!current_user_can('manage_options'))
         {
@@ -525,59 +393,8 @@ class Refolio
 
         $refolio_portfolios = get_option('refolio_portfolios');
 
-        ?>
-    <div class="wrap">
-        <h2>Refolio Portfolios</h2>
-        <input type="button" class="button button-large button-primary" value="New Portfolio"
-               style="margin: -30px 10px 10px 10px; float: right"
-               onclick="window.location = '<?php echo $this->build_admin_new_page_url(); ?>'"/>
-        <table class="widefat fixed refolio-table" style="margin-top: 15px">
-            <thead>
-            <th scope="col" id="name" class="manage-column">Project ID</th>
-            <th scope="col" id="usage" class="manage-column">Shortcode</th>
-            <th scope="col" id="entry_count" class="manage-column"># of Items</th>
-            <th scope="col" id="actions" class="manage-column">Actions</th>
-            </thead>
-            <tbody>
+        Refolio_Pages::review($refolio_portfolios, $this);
 
-
-                <?php
-                for ($i = 0; $i < count($refolio_portfolios->portfolios); $i++)
-                {
-                    ?>
-                <tr>
-                    <?php
-                    $portfolio = $refolio_portfolios->portfolios[$i];
-
-                    ?>
-                    <td><strong><?php echo $portfolio->id; ?></strong></td>
-                    <td>[refolio id="<?php echo $portfolio->id; ?>"]</td>
-                    <td><?php echo count($portfolio->entries); ?></td>
-                    <td><a href="<?php echo $this->build_admin_new_page_url() . '&refolio_id=' . $portfolio->id; ?>">Edit</a>
-                        | <a
-                                href="<?php echo $this->build_admin_options_page_url() . '&refolio_del=' . $portfolio->id; ?>"
-                                class="refolio-descructive">Delete</a></td>
-                </tr>
-                    <?php
-
-                } ?>
-            </tbody>
-
-        </table>
-
-        <?php
-        if (count($refolio_portfolios->portfolios) < 1)
-        {
-            ?>
-            <p>You currently don't have any portfolios created. <a
-                    href="<?php echo $this->build_admin_new_page_url(); ?>">Click here to create your first portfolio.
-            </p>
-            <?php
-        }
-
-        ?>
-    </div>
-    <?php
     }
 
 

@@ -220,6 +220,10 @@ refolio.admin.portfolio = (function ($)
     this.submit = function ()
     {
         _portfolio.id = $('#portfolio_id').val();
+        _portfolio.width = $("#portfolio_width").val();
+        _portfolio.height = $("#portfolio_height").val();
+
+        _portfolio.style_container = $("input[name=portfolio_style]:checked").val();
 
         var hasError = false;
         if (!_portfolio.id || _portfolio.id.indexOf(' ') >= 0)
@@ -231,6 +235,30 @@ refolio.admin.portfolio = (function ($)
         else
         {
             this.removeErrorStyling($('#portfolio_id'));
+            $('#refolio_errors').hide();
+        }
+
+        if (!_portfolio.width)
+        {
+            this.addErrorStyling($('#portfolio_width'));
+
+            hasError = true;
+        }
+        else
+        {
+            this.removeErrorStyling($('#portfolio_width'));
+            $('#refolio_errors').hide();
+        }
+
+        if (!_portfolio.height)
+        {
+            this.addErrorStyling($('#portfolio_height'));
+
+            hasError = true;
+        }
+        else
+        {
+            this.removeErrorStyling($('#portfolio_height'));
             $('#refolio_errors').hide();
         }
 
