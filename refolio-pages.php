@@ -102,9 +102,9 @@ class Refolio_Pages
                 $content .= '
                     {
                         image:"' . $entry->image . '",
-                        title:"' . $entry->title . '",
-                        tags:' . $entry->buildTagArrayString() . ',
-                        description:"' . $entry->description . '",
+                        title:"' . addslashes($entry->title) . '",
+                        tags:' . addslashes($entry->buildTagArrayString()) . ',
+                        description:"' . addslashes($entry->description) . '",
                         link:"' . $entry->url . '"
                     },';
             }
@@ -211,7 +211,7 @@ class Refolio_Pages
         <div class="postbox refolio-form" style="margin-top: 15px">
             <div class="handlediv" title="Click to toggle"><br>
             </div>
-            <h3 class="portfolio-entry-title">Portfolio Details</h3>
+            <h3 class="refolio-entry-title">Portfolio Details</h3>
 
             <?php if ($id_not_unique)
         {
@@ -297,7 +297,7 @@ class Refolio_Pages
                 <div class="handlediv" title="Click to toggle"
                      onclick="refolio.admin.portfolio.toggleElementShowHide(<%=id%>);"><br>
                 </div>
-                <h3 class="portfolio-entry-title"><span
+                <h3 class="refolio-entry-title"><span
                         id="portfolio_entry_title_<%=id%>"><%= title ? title : "Portfolio Item" %></span></h3>
 
                 <div class="inside refolio-form" id="portfolio_entry_inside_<%=id%>">
@@ -379,7 +379,7 @@ class Refolio_Pages
         <script type="text/javascript">
             jQuery(document).ready(function ()
             {
-                refolio.admin.portfolio.init('<?php echo json_encode($portfolio); ?>', '<?php echo plugins_url() . '/refolio/image/no-image.jpg'; ?>');
+                refolio.admin.portfolio.init('<?php echo addslashes(json_encode($portfolio)); ?>', '<?php echo plugins_url() . '/refolio/image/no-image.jpg'; ?>');
             });
         </script>
 
