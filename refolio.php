@@ -1,6 +1,6 @@
 <?php
 /*
-Plugin Name: reFolio
+Plugin Name: reFolio - Elegant Portfolios
 Description: A beautiful and elegant portfolio plugin.
 Version: 1.0
 Author: Kyle Thielk
@@ -65,42 +65,7 @@ class Refolio
 
             $portfolio = $this->fetch_portfolio($id);
 
-            if (!isset($portfolio) || $portfolio->incremented_id < 0)
-            {
-                return '!!!Unfortunately there was an error retrieving your reFolio portfolio!!!';
-            }
-            else
-            {
-                usort($portfolio->entries, array($this, 'entry_sort'));
-
-                $div_id = 'reFolio_portfolio_' . $portfolio->incremented_id;
-
-                $content = '<div id="' . $div_id . '" style="height: ' . $portfolio->height . 'px"></div>';
-
-                $content .= '<script type="text/javascript">jQuery(document).ready(function ()
-                {
-                    var portfolio = jQuery("#' . $div_id . '").refolio({
-            width:' . $portfolio->width . ',
-            styleContainer: ' . $portfolio->style_container . ',
-            items:[';
-
-                foreach ($portfolio->entries as $key => $entry)
-                {
-
-                    $content .= '
-                    {
-                        image:"' . $entry->image . '",
-                        title:"' . $entry->title . '",
-                        tags:'.$entry->buildTagArrayString().',
-                        description:"' . $entry->description . '",
-                        link:"' . $entry->url . '"
-                    },';
-                }
-                //Remove last comma
-                $content = substr($content, 0, -1);
-                $content .= ']       });    });</script>';
-                return $content;
-            }
+            return Refolio_Pages::shortcode($portfolio, $this);
         }
         return '!!!Unfortunately there was an error retrieving your reFolio portfolio. Please make sure to specify the id i.e [refolio id="portfolioId"]!!!';
     }
@@ -231,7 +196,7 @@ class Refolio
 
         foreach ($refolio_portfolios->portfolios as $key => $value)
         {
-            if (strtolower($value->id) == strtolower($portfolio->id))
+            if (strtolower($value->incremented_id) == strtolower($portfolio->incremented_id))
             {
                 $refolio_portfolios->portfolios[$key] = $portfolio;
                 update_option('refolio_portfolios', $refolio_portfolios);

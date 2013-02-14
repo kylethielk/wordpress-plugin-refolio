@@ -15,7 +15,8 @@ class Refolio_Pages
         ?>
     <div class="wrap">
         <h2>Refolio Portfolios</h2>
-        <input type="button" class="button button-large button-primary" value="New Portfolio" class="refolio-new-portfolio-button"
+        <input type="button" class="button button-large button-primary" value="New Portfolio"
+               class="refolio-new-portfolio-button"
 
                onclick="window.location = '<?php echo $refolio->build_admin_modify_page_url(); ?>'"/>
         <table class="widefat fixed refolio-table" style="margin-top: 15px">
@@ -69,6 +70,51 @@ class Refolio_Pages
     <?php
     }
 
+    /**
+     * Builds the shortcode output.
+     * @param Refolio_Portfolio $portfolio
+     * @param Refolio $refolio
+     */
+    public static function shortcode($portfolio, $refolio)
+    {
+        if (!isset($portfolio) || $portfolio->incremented_id < 0)
+        {
+            return '!!!Unfortunately there was an error retrieving your reFolio portfolio!!!';
+        }
+        else
+        {
+            usort($portfolio->entries, array($refolio, 'entry_sort'));
+
+            $div_id = 'reFolio_portfolio_' . $portfolio->incremented_id;
+
+            $content = '<div id="' . $div_id . '" style="height: ' . $portfolio->height . 'px"></div>';
+
+            $content .= '<script type="text/javascript">jQuery(document).ready(function ()
+                {
+                    var portfolio = jQuery("#' . $div_id . '").refolio({
+            width:' . $portfolio->width . ',
+            styleContainer: ' . $portfolio->style_container . ',
+            items:[';
+
+            foreach ($portfolio->entries as $key => $entry)
+            {
+
+                $content .= '
+                    {
+                        image:"' . $entry->image . '",
+                        title:"' . $entry->title . '",
+                        tags:' . $entry->buildTagArrayString() . ',
+                        description:"' . $entry->description . '",
+                        link:"' . $entry->url . '"
+                    },';
+            }
+            //Remove last comma
+            $content = substr($content, 0, -1);
+            $content .= ']       });    });</script>';
+            return $content;
+        }
+    }
+
 
     /**
      * Builds the help page.
@@ -95,7 +141,10 @@ class Refolio_Pages
         <img src="<?php echo plugins_url() . '/refolio/image/help_create.jpg'; ?>"/>
 
         <p>Each portfolio must have an ID that is unique across all of your portfolios and must not contain any
-            spaces.</p>
+            spaces. Each portfolio must also have a defined size. The default size of 700x500px is often perfect for
+            most default wordpress installs. You can also optionally let reFolio style the container of the portfolio
+            for you. This is totally up to you and by default reFolio will not style the container for your
+            portfolio.</p>
 
         <p>Each portfolio must also have at least one entry. A portfolio can have an unlimited number of entries.</p>
 
@@ -152,7 +201,7 @@ class Refolio_Pages
     {
         ?>
     <div class="wrap">
-        <h2>Add New Portfolio</h2>
+        <h2><?php echo (empty($portfolio->id) ? "Add New Portfolio" : "Modify Portfolio"); ?></h2>
         <!-- Create the form that will be used to render our options -->
         <form method="post" action="<?php echo $_SERVER['REQUEST_URI']; ?>" id="portfolio_form">
             <input type="hidden" id="refolio_action" name="refolio_action" value="new"/>
@@ -182,7 +231,8 @@ class Refolio_Pages
                         <label for="portfolio_id">Must be unique, no spaces.</label>
                     </th>
                     <td>
-                        <input type="text" id="portfolio_id" name="portfolio_id" value="<?php echo $portfolio->id; ?>" class="refolio-form-input"/>
+                        <input type="text" id="portfolio_id" name="portfolio_id" value="<?php echo $portfolio->id; ?>"
+                               class="refolio-form-input"/>
                     </td>
                 </tr>
                 <tr valign="top">
@@ -191,8 +241,10 @@ class Refolio_Pages
                         <label for="portfolio_height">Size of portfolio in pixels.</label>
                     </th>
                     <td>
-                        <input type="text" id="portfolio_width" name="portfolio_width" value="<?php echo $portfolio->width; ?>" class="refolio-small-input"/> by
-                        <input type="text" id="portfolio_height" name="portfolio_height" value="<?php echo $portfolio->height; ?>" class="refolio-small-input"/>px
+                        <input type="text" id="portfolio_width" name="portfolio_width"
+                               value="<?php echo $portfolio->width; ?>" class="refolio-small-input"/> by
+                        <input type="text" id="portfolio_height" name="portfolio_height"
+                               value="<?php echo $portfolio->height; ?>" class="refolio-small-input"/>px
                     </td>
                 </tr>
                 <tr valign="top">
@@ -201,8 +253,11 @@ class Refolio_Pages
                         <label for="portfolio_height">Style the container, generally leave as false.</label>
                     </th>
                     <td>
-                        <input type="radio" name="portfolio_style" id="portfolio_style" value="false" <?php echo ($portfolio->style_container == 'false' ? ' checked' : ''); ?>>False &nbsp; &nbsp;
-                        <input type="radio" name="portfolio_style" id="portfolio_style" value="true" <?php echo ($portfolio->style_container == 'true' ? ' checked' : ''); ?>>True
+                        <input type="radio" name="portfolio_style"
+                               value="false" <?php echo ($portfolio->style_container == 'false' ? ' checked' : ''); ?>>False
+                        &nbsp; &nbsp;
+                        <input type="radio" name="portfolio_style"
+                               value="true" <?php echo ($portfolio->style_container == 'true' ? ' checked' : ''); ?>>True
                     </td>
                 </tr>
                 </tbody>
@@ -303,7 +358,7 @@ class Refolio_Pages
                             </th>
                             <td>
                                 <input type="text" id="entry_url_<%=id%>" name="entry_url_<%=id%>" value="<%=url%>"
-                                       class="refolio-form-input" />
+                                       class="refolio-form-input"/>
 
                             </td>
                         </tr>
