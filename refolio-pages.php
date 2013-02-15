@@ -71,6 +71,17 @@ class Refolio_Pages
     }
 
     /**
+     * Replaces new line characters with <br />
+     * @param $string
+     * @return String
+     */
+    public static function nl2br_replace($string)
+    {
+        $string = str_replace(array("\r\n", "\r", "\n"), "<br />", $string);
+        return $string;
+    }
+
+    /**
      * Builds the shortcode output.
      * @param Refolio_Portfolio $portfolio
      * @param Refolio $refolio
@@ -103,8 +114,8 @@ class Refolio_Pages
                     {
                         image:"' . $entry->image . '",
                         title:"' . addslashes($entry->title) . '",
-                        tags:' . addslashes($entry->buildTagArrayString()) . ',
-                        description:"' . addslashes($entry->description) . '",
+                        tags:' . $entry->build_tag_array_string() . ',
+                        description:"' . addslashes(Refolio_Pages::nl2br_replace($entry->description)) . '",
                         link:"' . $entry->url . '"
                     },';
             }

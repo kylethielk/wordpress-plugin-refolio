@@ -49,7 +49,7 @@ class Refolio_Portfolio_Entry
      * ["tag1","tag2","tag3"]
      * @return String
      */
-    public function buildTagArrayString()
+    public function build_tag_array_string()
     {
         if (empty($this->tags))
         {
@@ -66,7 +66,7 @@ class Refolio_Portfolio_Entry
 
         foreach ($tag_array as $key => $tag)
         {
-            $tag_string .= '"' . $tag . '",';
+            $tag_string .= '"' . addslashes($tag) . '",';
         }
 
         //Strip last comma
