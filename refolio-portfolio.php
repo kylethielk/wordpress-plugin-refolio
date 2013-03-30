@@ -50,11 +50,11 @@ class Refolio_Portfolio
      */
     public function set($data)
     {
-        $this->id = $data['id'];
+        $this->id = $this->removeAllButAlphaNumeric($data['id']);
         $this->incremented_id = $data['incremented_id'];
         $this->entries = array();
-        $this->width = $data['width'];
-        $this->height = $data['height'];
+        $this->width = intval($data['width']);
+        $this->height = intval($data['height']);
         $this->style_container = $data['style_container'];
 
 
@@ -68,5 +68,16 @@ class Refolio_Portfolio
             }
         }
 
+    }
+
+    /**
+     * Removes all but alphanumeric characters.
+     * @param $string
+     * @return mixed
+     */
+    private function removeAllButAlphaNumeric($string)
+    {
+        //preg_match("/^[^a-z0-9.]+/i", $string);
+        return preg_replace("/[^a-z0-9.]+/i", "", $string);
     }
 }

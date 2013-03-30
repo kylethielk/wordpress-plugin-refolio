@@ -8,7 +8,7 @@ refolio.admin = {};
 refolio.admin.scrollToAnchor = function (anchorName)
 {
     var anchorTag = jQuery("a[name='" + anchorName + "']");
-    jQuery('html,body').animate({scrollTop:anchorTag.offset().top}, 'slow');
+    jQuery('html,body').animate({scrollTop: anchorTag.offset().top}, 'slow');
 };
 
 /**
@@ -106,7 +106,7 @@ refolio.admin.portfolio = (function ($)
         else
         {
             //New portfolio, no items exist yet.
-            var entry = {id:0, title:'', description:'', tags:'', url:'', order:0};
+            var entry = {id: 0, title: '', description: '', tags: '', url: '', order: 0};
             _portfolio.entries.push(entry);
 
             $('#refolio_portfolio_entries').append(this.buildEntry(entry, 0));
@@ -117,7 +117,7 @@ refolio.admin.portfolio = (function ($)
         var _this = this;
 
         $('#refolio_portfolio_entries').sortable({
-            update:function (event, ui)
+            update: function (event, ui)
             {
                 //When we are done with a sort, we need to update our entry.order
                 var count = 0;
@@ -146,11 +146,42 @@ refolio.admin.portfolio = (function ($)
         {
             entry.image = _noImageSrc;
         }
-        var html = $('#refolio_entry_template').html();
-        var item = tmpl($('#refolio_entry_template').html(), entry);
+
+        var item = tmpl($('#refolio_entry_template').html(), this.sanitizeEntryForOutput(entry));
 
 
         return $(item);
+    };
+    /**
+     * @param {*} entry The portfolio entry.
+     * @return {*} The entry with HTML sanitized.
+     */
+    this.sanitizeEntryForOutput = function (entry)
+    {
+        var cleanEntry = {};
+        for (var key in entry)
+        {
+            cleanEntry[key] = this.escapeHtml(entry[key]);
+        }
+        return cleanEntry;
+    };
+
+    this.entityMap = {
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': '&quot;',
+        "'": '&#39;',
+        "/": '&#x2F;'
+    };
+
+    this.escapeHtml = function (string)
+    {
+        var _this = this;
+        return String(string).replace(/[&<>"'\/]/g, function (s)
+        {
+            return _this.entityMap[s];
+        });
     };
     /**
      * Find and returns a portfolio entry based on supplied id.
@@ -174,7 +205,7 @@ refolio.admin.portfolio = (function ($)
      */
     this.addEntry = function ()
     {
-        var entry = {id:_indexCount, order:_indexCount, title:'', description:'', tags:'', url:''};
+        var entry = {id: _indexCount, order: _indexCount, title: '', description: '', tags: '', url: ''};
         _portfolio.entries.push(entry);
 
         $('#refolio_portfolio_entries').append(this.buildEntry(entry, 0));
@@ -205,7 +236,7 @@ refolio.admin.portfolio = (function ($)
         }
 
         //Animate the removal before actually removing.
-        $('#refolio_entry_' + id).animate({opacity:0.0, height:0, margin:0}, 1000, 'swing', function ()
+        $('#refolio_entry_' + id).animate({opacity: 0.0, height: 0, margin: 0}, 1000, 'swing', function ()
         {
             $('#refolio_entry_' + id).remove();
 
@@ -226,7 +257,7 @@ refolio.admin.portfolio = (function ($)
         _portfolio.style_container = $('input[name=portfolio_style]:checked').val();
 
         var hasError = false;
-        if (!_portfolio.id || _portfolio.id.indexOf(' ') >= 0)
+        if (!_portfolio.id || _portfolio.id.indexOf(' ') >= 0 || _portfolio.id.match(/[^a-z0-9]/gi))
         {
             this.addErrorStyling($('#portfolio_id'));
 
@@ -238,7 +269,7 @@ refolio.admin.portfolio = (function ($)
             $('#refolio_errors').hide();
         }
 
-        if (!_portfolio.width)
+        if (!_portfolio.width || _portfolio.width.match(/[^0-9]/gi))
         {
             this.addErrorStyling($('#portfolio_width'));
 
@@ -250,7 +281,7 @@ refolio.admin.portfolio = (function ($)
             $('#refolio_errors').hide();
         }
 
-        if (!_portfolio.height)
+        if (!_portfolio.height || _portfolio.height.match(/[^0-9]/gi))
         {
             this.addErrorStyling($('#portfolio_height'));
 
@@ -360,7 +391,7 @@ refolio.admin.portfolio = (function ($)
      */
     this.itemTitleChange = function (id)
     {
-        var newTitle = $('#entry_title_' + id).val();
+        var newTitle = this.escapeHtml($('#entry_title_' + id).val());
         if (!newTitle)
         {
             newTitle = 'Portfolio Item';

@@ -123,9 +123,9 @@ class Refolio
 
     /**
      * Removes the portfolio of the given ID.
-     * @param $portfolioId The id of the portfolio to delete.
+     * @param $portfolio_id The id of the portfolio to delete.
      */
-    function delete_portfolio($portfolioId)
+    function delete_portfolio($portfolio_id)
     {
         $refolio_portfolios = get_option('refolio_portfolios');
 
@@ -137,7 +137,7 @@ class Refolio
         $remove_key = null;
         foreach ($refolio_portfolios->portfolios as $key => $value)
         {
-            if (strtolower($value->id) == strtolower($portfolioId))
+            if (strtolower($value->id) == strtolower($portfolio_id))
             {
                 $remove_key = $key;
                 break;

@@ -66,7 +66,7 @@ class Refolio_Portfolio_Entry
 
         foreach ($tag_array as $key => $tag)
         {
-            $tag_string .= '"' . addslashes($tag) . '",';
+            $tag_string .= '"' . htmlspecialchars(addslashes($tag)) . '",';
         }
 
         //Strip last comma
