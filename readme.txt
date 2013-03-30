@@ -4,11 +4,11 @@ Donate link: http://www.bitofnothing.com
 Tags: portfolio
 Requires at least: 3.5
 Tested up to: 3.5
-Stable tag: 1.0
+Stable tag: 1.0.1
 License: GPLv2
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
-reFolio is a plugin portfolio providing elegant portfolios anywhere on your wordpress site!
+reFolio is a plugin portfolio providing elegant portfolios anywhere on your wordpress site.
 
 == Description ==
 
@@ -19,8 +19,6 @@ means a quick snappy portfolio that lets your work shine.
 == Installation ==
 
 This section describes how to install the plugin and get it working.
-
-e.g.
 
 1. Upload the `refolio` folder to the `/wp-content/plugins/` directory
 2. Activate the plugin through the 'Plugins' menu in WordPress
@@ -44,5 +42,21 @@ Works perfectly and tested on all modern browsers. Requires javascript support.
 
 == Changelog ==
 
-= 1.0 =
+= 1.0.1 =
+
+* Fixed a potential security issue that could potentially allow a XSS attack however since this was only pages in the wp-admin section, the risk was minimal.
+* Fixed a minor typo: http://wordpress.org/support/topic/small-correction-of-size-being-used-twice?replies=1
+
+= 1.0.0 =
+
 * Thoroughly tested and stable first release.
+
+== Upgrade Notice ==
+
+= 1.0.1 =
+
+Replace all files in the `/wp-content/plugins/refolio` directory with those from this release.
+
+= 1.0.0 =
+
+First version, no upgrade instructions.
