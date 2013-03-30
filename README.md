@@ -3,6 +3,8 @@ wordpress-plugin-refolio
 
 A wordpress plugin version of jquery-refolio (https://github.com/kylethielk/jquery-refolio).
 
+Can be downloaded here: http://wordpress.org/extend/plugins/refolio/
+
 License
 -------
 
